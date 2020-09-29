@@ -154,11 +154,12 @@ class Xbox360Controller:
     def get_available(cls):
         return [cls(index) for index in range(len(glob("/dev/input/js*")))]
 
-    def __init__(self, index=0, axis_threshold=0.2, raw_mode=False):
+    def __init__(self, index=0, axis_threshold=0.2, raw_mode=False, switch_axis_r_with_trigger_l=False):
         self.index = index
         self.axis_threshold = axis_threshold
         self.raw_mode = raw_mode
         self._ff_id = -1
+        self.switch_axis_r_with_trigger_l = switch_axis_r_with_trigger_l
 
         try:
             self._dev_file = open(self._get_dev_file(), "rb")
@@ -334,16 +335,25 @@ class Xbox360Controller:
             else:
                 num = event.number
                 val = event.value / 32767
+                
+                if self.switch_axis_r_with_trigger_l:
+                    trigger_num = 4
+                    axis_r_x_num = 2
+                    axis_r_y_num = 3
+                else:
+                    trigger_num = 2
+                    axis_r_x_num = 3
+                    axis_r_y_num = 4
 
                 if num == 0:
                     self.axis_l._value_x = val
                 if num == 1:
                     self.axis_l._value_y = val
-                if num == 2:
+                if num == trigger_num:
                     self.trigger_l._value = (val + 1) / 2
-                if num == 3:
+                if num == axis_r_x_num:
                     self.axis_r._value_x = val
-                if num == 4:
+                if num == axis_r_y_num:
                     self.axis_r._value_y = val
                 if num == 5:
                     self.trigger_r._value = (val + 1) / 2
